@@ -13,17 +13,20 @@ describe("validateSignUpInput", () => {
     const errors = validateSignUpInput({
       email: "user@example.com",
       password: "securePass1",
+      confirmPassword: "securePass1",
     });
 
     expect(isAuthInputValid(errors)).toBe(true);
     expect(errors.email).toBeUndefined();
     expect(errors.password).toBeUndefined();
+    expect(errors.confirmPassword).toBeUndefined();
   });
 
   it("returns an error when email is empty", () => {
     const errors = validateSignUpInput({
       email: "",
       password: "securePass1",
+      confirmPassword: "securePass1",
     });
 
     expect(isAuthInputValid(errors)).toBe(false);
@@ -34,6 +37,7 @@ describe("validateSignUpInput", () => {
     const errors = validateSignUpInput({
       email: "   ",
       password: "securePass1",
+      confirmPassword: "securePass1",
     });
 
     expect(isAuthInputValid(errors)).toBe(false);
@@ -44,6 +48,7 @@ describe("validateSignUpInput", () => {
     const errors = validateSignUpInput({
       email: "not-an-email",
       password: "securePass1",
+      confirmPassword: "securePass1",
     });
 
     expect(isAuthInputValid(errors)).toBe(false);
@@ -54,6 +59,7 @@ describe("validateSignUpInput", () => {
     const errors = validateSignUpInput({
       email: "user@example.com",
       password: "",
+      confirmPassword: "",
     });
 
     expect(isAuthInputValid(errors)).toBe(false);
@@ -64,6 +70,7 @@ describe("validateSignUpInput", () => {
     const errors = validateSignUpInput({
       email: "user@example.com",
       password: "abc12",
+      confirmPassword: "abc12",
     });
 
     expect(isAuthInputValid(errors)).toBe(false);
@@ -74,9 +81,48 @@ describe("validateSignUpInput", () => {
     const errors = validateSignUpInput({
       email: "user@example.com",
       password: "abc123",
+      confirmPassword: "abc123",
     });
 
     expect(isAuthInputValid(errors)).toBe(true);
+  });
+
+  // -----------------------------------------------------------------------
+  // confirmPassword validation
+  // -----------------------------------------------------------------------
+
+  it("returns an error when confirmPassword does not match password", () => {
+    const errors = validateSignUpInput({
+      email: "user@example.com",
+      password: "securePass1",
+      confirmPassword: "differentPass",
+    });
+
+    expect(isAuthInputValid(errors)).toBe(false);
+    expect(errors.confirmPassword).toBe("Passwords do not match.");
+  });
+
+  it("returns no confirmPassword error when passwords match", () => {
+    const errors = validateSignUpInput({
+      email: "user@example.com",
+      password: "securePass1",
+      confirmPassword: "securePass1",
+    });
+
+    expect(errors.confirmPassword).toBeUndefined();
+  });
+
+  it("does not check confirmPassword mismatch when password itself is empty", () => {
+    const errors = validateSignUpInput({
+      email: "user@example.com",
+      password: "",
+      confirmPassword: "anything",
+    });
+
+    // Password is empty → password error present, but confirmPassword
+    // mismatch should NOT be flagged (password must pass first)
+    expect(errors.password).toBeDefined();
+    expect(errors.confirmPassword).toBeUndefined();
   });
 });
 
@@ -151,5 +197,9 @@ describe("isAuthInputValid", () => {
 
   it("returns false when password error is present", () => {
     expect(isAuthInputValid({ password: "Bad" })).toBe(false);
+  });
+
+  it("returns false when confirmPassword error is present", () => {
+    expect(isAuthInputValid({ confirmPassword: "Bad" })).toBe(false);
   });
 });

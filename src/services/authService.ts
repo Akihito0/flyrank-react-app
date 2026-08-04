@@ -101,14 +101,18 @@ function toReadableError(error: unknown): Error {
 /**
  * Creates a new user account with email and password.
  *
+ * Only `email` and `password` are forwarded to Firebase —
+ * `confirmPassword` is intentionally excluded (validation-only field).
+ *
  * @throws {Error} Readable error if Firebase rejects the request.
  */
 export async function signUp(input: SignUpInput): Promise<AuthUser> {
+  const { email, password } = input;
   try {
     const credential = await createUserWithEmailAndPassword(
       auth,
-      input.email,
-      input.password
+      email,
+      password
     );
     return mapFirebaseUser(credential.user);
   } catch (error: unknown) {
