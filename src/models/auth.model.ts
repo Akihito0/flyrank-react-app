@@ -17,6 +17,7 @@ export type AuthUser = {
 export type SignUpInput = {
   email: string;
   password: string;
+  confirmPassword: string;
 };
 
 export type SignInInput = {
@@ -27,6 +28,7 @@ export type SignInInput = {
 export type AuthValidationErrors = {
   email?: string;
   password?: string;
+  confirmPassword?: string;
 };
 
 // ---------------------------------------------------------------------------
@@ -45,6 +47,7 @@ const MIN_PASSWORD_LENGTH = 6;
  *
  * - Email must be non-empty and match a basic email pattern.
  * - Password must be non-empty and at least 6 characters (Firebase minimum).
+ * - confirmPassword must match password.
  *
  * Returns an object whose keys are only present when there is an error.
  */
@@ -61,6 +64,10 @@ export function validateSignUpInput(input: SignUpInput): AuthValidationErrors {
     errors.password = "Password is required.";
   } else if (input.password.length < MIN_PASSWORD_LENGTH) {
     errors.password = `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`;
+  }
+
+  if (input.password && input.password !== input.confirmPassword) {
+    errors.confirmPassword = "Passwords do not match.";
   }
 
   return errors;

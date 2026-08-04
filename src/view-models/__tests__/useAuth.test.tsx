@@ -9,6 +9,7 @@
  *   1. Starts in loading: true state.
  *   2. Reacts to the auth state listener firing.
  *   3. Surfaces service errors into the error state.
+ *   4. Validates input (including confirmPassword) before calling the service.
  */
 
 import { renderHook, act } from "@testing-library/react";
@@ -148,6 +149,7 @@ describe("useAuth", () => {
       await result.current.signUp({
         email: "taken@example.com",
         password: "password123",
+        confirmPassword: "password123",
       });
     });
 
@@ -174,6 +176,7 @@ describe("useAuth", () => {
       await result.current.signUp({
         email: "new@example.com",
         password: "password123",
+        confirmPassword: "password123",
       });
     });
 
@@ -219,7 +222,7 @@ describe("useAuth", () => {
       const { result } = renderHook(() => useAuth());
 
       await act(async () => {
-        await result.current.signUp({ email: "  ", password: "password123" });
+        await result.current.signUp({ email: "  ", password: "password123", confirmPassword: "password123" });
       });
 
       expect(result.current.fieldErrors.email).toBe("Email is required.");
@@ -231,7 +234,7 @@ describe("useAuth", () => {
       const { result } = renderHook(() => useAuth());
 
       await act(async () => {
-        await result.current.signUp({ email: "not-an-email", password: "password123" });
+        await result.current.signUp({ email: "not-an-email", password: "password123", confirmPassword: "password123" });
       });
 
       expect(result.current.fieldErrors.email).toBe("Please enter a valid email address.");
@@ -242,11 +245,29 @@ describe("useAuth", () => {
       const { result } = renderHook(() => useAuth());
 
       await act(async () => {
-        await result.current.signUp({ email: "user@example.com", password: "abc" });
+        await result.current.signUp({ email: "user@example.com", password: "abc", confirmPassword: "abc" });
       });
 
       expect(result.current.fieldErrors.password).toBe(
         "Password must be at least 6 characters."
+      );
+      expect(result.current.error).toBeNull();
+      expect(mockSignUp).not.toHaveBeenCalled();
+    });
+
+    it("rejects mismatched confirmPassword without calling the service", async () => {
+      const { result } = renderHook(() => useAuth());
+
+      await act(async () => {
+        await result.current.signUp({
+          email: "user@example.com",
+          password: "password123",
+          confirmPassword: "different456",
+        });
+      });
+
+      expect(result.current.fieldErrors.confirmPassword).toBe(
+        "Passwords do not match."
       );
       expect(result.current.error).toBeNull();
       expect(mockSignUp).not.toHaveBeenCalled();
@@ -258,13 +279,13 @@ describe("useAuth", () => {
 
       // First call: invalid → fieldErrors populated
       await act(async () => {
-        await result.current.signUp({ email: "", password: "" });
+        await result.current.signUp({ email: "", password: "", confirmPassword: "" });
       });
       expect(result.current.fieldErrors.email).toBeDefined();
 
       // Second call: valid → fieldErrors cleared, service called
       await act(async () => {
-        await result.current.signUp({ email: "a@b.com", password: "password123" });
+        await result.current.signUp({ email: "a@b.com", password: "password123", confirmPassword: "password123" });
       });
       expect(result.current.fieldErrors).toEqual({});
       expect(mockSignUp).toHaveBeenCalledTimes(1);

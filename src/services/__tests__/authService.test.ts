@@ -77,6 +77,7 @@ describe("authService", () => {
       const result = await signUp({
         email: "test@example.com",
         password: "password123",
+        confirmPassword: "password123",
       });
 
       expect(result).toEqual({ uid: "uid-123", email: "test@example.com" });
@@ -89,7 +90,7 @@ describe("authService", () => {
       );
 
       await expect(
-        signUp({ email: "taken@example.com", password: "password123" })
+        signUp({ email: "taken@example.com", password: "password123", confirmPassword: "password123" })
       ).rejects.toThrow("An account with this email address already exists.");
     });
 
@@ -99,7 +100,7 @@ describe("authService", () => {
       );
 
       await expect(
-        signUp({ email: "test@example.com", password: "123" })
+        signUp({ email: "test@example.com", password: "123", confirmPassword: "123" })
       ).rejects.toThrow(/stronger password/i);
     });
   });
